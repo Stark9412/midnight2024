@@ -82,6 +82,11 @@ public class BusNav_Controller : MonoBehaviour
     public void BusStop()
     {
         // 감속 처리
+        if (agent.isStopped ==  true)
+        {
+            return;
+        }
+
         currentSpeed -= deceleration * Time.deltaTime;
         currentSpeed = Mathf.Clamp(currentSpeed, 0, maxSpeed);
         agent.speed = currentSpeed;
@@ -94,7 +99,7 @@ public class BusNav_Controller : MonoBehaviour
             agent.isStopped = true; // NavMeshAgent를 멈추게 함
             //isBusRun = false; // 버스가 정지 상태로 설정
 
-            StartCoroutine(WaitAndMoveBus(3f));
+            StartCoroutine(WaitAndMoveBus(2f));
         }
     }
 
@@ -112,5 +117,18 @@ public class BusNav_Controller : MonoBehaviour
         {
             agent.SetDestination(destinations[currentDestinationIndex].position);
         }
+    }
+
+
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("Person"))
+        {
+            Debug.Log("사람입니다");
+        }
+
+          
+
     }
 }
