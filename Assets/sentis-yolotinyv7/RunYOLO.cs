@@ -64,7 +64,7 @@ public class RunYOLO : MonoBehaviour
 
         model = ModelLoader.Load(modelAsset);
 
-        targetRT = new RenderTexture(800, 500, 0);
+        targetRT = new RenderTexture(2560, 1600, 0);
 
         engine = WorkerFactory.CreateWorker(BackendType.GPUCompute, model);
 
