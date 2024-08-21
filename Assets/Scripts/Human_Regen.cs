@@ -29,9 +29,10 @@ public class Human_Regen : MonoBehaviour
             GameObject hum = Instantiate(humanPrefab);
 
             hum.transform.position = humanRegenPoint.position;
+            hum.transform.rotation = humanRegenPoint.rotation;
 
             // 생성된 hum을 자식으로 넣기
-            hum.transform.parent = humanRegenPoint.transform;
+            hum.transform.SetParent(humanRegenPoint);
 
             // 5초후 hum을 setactive(false)
             StartCoroutine(DeactivateHum(hum, 5f));

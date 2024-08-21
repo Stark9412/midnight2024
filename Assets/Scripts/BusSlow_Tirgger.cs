@@ -23,7 +23,7 @@ public class BusSlow_Tirgger : MonoBehaviour // 버스가 닿으면 최대속도를 n값으로
 
         if (bus != null)
         {
-            bus.maxSpeed = 20;
+            bus.maxSpeed = 5;
         }
     }
 
@@ -34,7 +34,7 @@ public class BusSlow_Tirgger : MonoBehaviour // 버스가 닿으면 최대속도를 n값으로
 
         if (bus != null)
         {
-            bus.maxSpeed = 50;
+            bus.maxSpeed = 20;
         }
     }
 }

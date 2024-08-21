@@ -138,12 +138,12 @@ public class RunYOLO : MonoBehaviour
                 label = labels[(int)output[n, 5]],
                 confidence = Mathf.FloorToInt(output[n, 6] * 100 + 0.5f)
             };
-            
+            /*
             if (box.confidence > 65)
             {
                 DrawBox(box, n);
-            }
-            //DrawBox(box, n);
+            }*/
+            DrawBox(box, n);
         }
     }
 
