@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Human_Run : MonoBehaviour // 생성된 사람이 transform.foward로 걷게 하기
 {
-    float humWalkSpeed = 12f;
+    float humWalkSpeed = 8f;
 
 
     void Start()
