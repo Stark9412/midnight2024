@@ -99,7 +99,7 @@ public class BusNav_Controller : MonoBehaviour
             agent.isStopped = true; // NavMeshAgent를 멈추게 함
             //isBusRun = false; // 버스가 정지 상태로 설정
 
-            StartCoroutine(WaitAndMoveBus(3f));
+            StartCoroutine(WaitAndMoveBus(2f));
         }
     }
 
