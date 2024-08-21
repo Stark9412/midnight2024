@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Bus
   - Human
+  - Person
   layers:
   - Default
   - TransparentFX
