@@ -36,24 +36,7 @@ public class RunYOLO : MonoBehaviour
 
     Color boxColor = Color.red;
 
-    /* private Color[] classColors = new Color[]
-     {
-         Color.red,
-         Color.green,
-         Color.blue,
-         Color.yellow,
-         Color.magenta,
-         Color.cyan,
-         Color.gray,
-         Color.white,
-         Color.black
-     };*/
-
-/*    Dictionary<string, Color> labelColorMapping = new Dictionary<string, Color>()
-    {
-        { "person", Color.red },
-        { "car", Color.blue },
-    };*/
+    public int Alarm = 1;
 
     public struct BoundingBox
     {
@@ -109,7 +92,7 @@ public class RunYOLO : MonoBehaviour
         mainCamera.targetTexture = null;
 
         // 텍스처를 모델 입력으로 변환
-        using var input = TextureConverter.ToTensor(targetRT, 640, 640, 3);
+        using var input = TextureConverter.ToTensor(targetRT, imageWidth, imageHeight, 3);
 
         engine.Execute(input);
 
@@ -131,19 +114,19 @@ public class RunYOLO : MonoBehaviour
         {
             var box = new BoundingBox
             {
-                centerX = ((output[n, 1] + output[n, 3]) * 0.5f * scaleX), // 640 * 2560),
+                centerX = ((output[n, 1] + output[n, 3]) * 0.5f * scaleX),
+
                 centerY = displayHeight + ((output[n, 2] + output[n, 4]) * 0.5f * -scaleY),
+
                 width = (output[n, 3] - output[n, 1]) * scaleX * 1.5f,
+
                 height = (output[n, 4] - output[n, 2]) * scaleY * 1.5f,
+
                 label = labels[(int)output[n, 5]],
+
                 confidence = Mathf.FloorToInt(output[n, 6] * 100 + 0.5f)
             };
-            
-            if (box.confidence > 65)
-            {
-                DrawBox(box, n);
-            }
-            //DrawBox(box, n);
+            DrawBox(box, n);
         }
     }
 
@@ -153,8 +136,6 @@ public class RunYOLO : MonoBehaviour
 
         GameObject[] person = GameObject.FindGameObjectsWithTag("Person");
         
-
-
         if (person.Length > 0) 
         {
             float[] distance = new float[person.Length];
@@ -178,8 +159,6 @@ public class RunYOLO : MonoBehaviour
         {
             panel = CreateNewBox(boxColor);
         }
-
-        //panel.transform.position = new Vector3(box.centerX, box.centerY);
 
         panel.transform.position = new Vector3(box.centerX, box.centerY);
 
