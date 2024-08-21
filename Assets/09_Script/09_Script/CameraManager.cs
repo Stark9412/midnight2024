@@ -25,12 +25,12 @@ public class CameraManager : MonoBehaviour
 
     IEnumerator MoveCamera()
     {
-        while (stopPotion > -550)
+        while (stopPotion > -190)
         {
             Vector3 position = transform.position;
             
             // 카메라 떨어지는 속도
-            position.y -= 0.5f;
+            position.y -= 1.5f;
             stopPotion -= 0.5f;
             
             transform.position = position;
