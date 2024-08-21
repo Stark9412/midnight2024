@@ -24,6 +24,8 @@ public class Human_Regen : MonoBehaviour
         // 버스가 닿으면 리젠 포인트에 사람을 생성
         if(other.CompareTag("Bus"))
         {
+            Debug.Log("벽에 닿았습니다.");
+
             GameObject hum = Instantiate(humanPrefab);
 
             hum.transform.position = humanRegenPoint.position;
@@ -32,7 +34,7 @@ public class Human_Regen : MonoBehaviour
             hum.transform.parent = humanRegenPoint.transform;
 
             // 5초후 hum을 setactive(false)
-            StartCoroutine(DeactivateHum(hum, 7f));
+            StartCoroutine(DeactivateHum(hum, 5f));
         }
 
     }
