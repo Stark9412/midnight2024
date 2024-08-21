@@ -21,7 +21,7 @@ public class BusStop_Trigger : MonoBehaviour // 부딪히면 Busmove3 의 Busstop 함�
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.CompareTag("Bus"))
+        if (other.CompareTag("Bus"))
         {
             Debug.Log("버스가 닿았습니다.");
             BusNav_Controller bus = other.GetComponent<BusNav_Controller>();
@@ -29,12 +29,13 @@ public class BusStop_Trigger : MonoBehaviour // 부딪히면 Busmove3 의 Busstop 함�
             if (bus != null)
             {
                 Debug.Log("버스를 감속시킵니다");
+
                 bus.isBusRun = false;
                 bus.BusStop();
 
             }
         }
-       
+
     }
 
 
