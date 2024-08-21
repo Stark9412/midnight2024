@@ -6,11 +6,11 @@ using UnityEngine.AI;
 
 public class BusNav_Controller : MonoBehaviour
 {
-   
+
     public Transform[] destinations;
     private int currentDestinationIndex = 0; // 현재 목적지 인덱스
     public float stoppingDistance = 1.0f; // 도착 판별 거리
-    
+
     [Header("버스 속도변수")]
     public float acceleration = 10f; // 가속도
     public float deceleration = 155f; // 감속 속도
@@ -24,7 +24,7 @@ public class BusNav_Controller : MonoBehaviour
 
         agent = GetComponent<NavMeshAgent>();
 
-        if (destinations.Length > 0) 
+        if (destinations.Length > 0)
         {
             SetDestination();
         }
@@ -33,15 +33,17 @@ public class BusNav_Controller : MonoBehaviour
         // 초기 속도 설정
         agent.speed = 0;
         currentSpeed = 0;
-        isBusRun = true;
+        //isBusRun = true;
 
-        if (destinations.Length > 0)
-        {
-            SetDestination();
-        }
-    }
+        //if (destinations.Length > 0)
+        //{
+        //    SetDestination();
+        //}
 
-    void Update()   
+        isBusRun = true; 
+}
+
+    void Update()
     {
         // 목적지에 도착했는지 확인
         if (agent.remainingDistance <= stoppingDistance && !agent.pathPending)
@@ -74,6 +76,7 @@ public class BusNav_Controller : MonoBehaviour
         currentSpeed += acceleration * Time.deltaTime;
         currentSpeed = Mathf.Clamp(currentSpeed, 0, maxSpeed);
         agent.speed = currentSpeed;
+        agent.isStopped = false;
     }
 
     public void BusStop()
@@ -90,9 +93,18 @@ public class BusNav_Controller : MonoBehaviour
             agent.speed = 0;
             agent.isStopped = true; // NavMeshAgent를 멈추게 함
             //isBusRun = false; // 버스가 정지 상태로 설정
+
+            StartCoroutine(WaitAndMoveBus(3f));
         }
     }
 
+    // Coroutine을 사용하여 일정 시간 후 MoveBus 호출
+    private IEnumerator WaitAndMoveBus(float time)
+    {
+        yield return new WaitForSeconds(time);
+        isBusRun = true; // 버스가 다시 움직이도록 설정
+
+    }
     // 
     void SetDestination()
     {
