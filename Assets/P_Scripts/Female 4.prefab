@@ -1454,7 +1454,7 @@ GameObject:
   - component: {fileID: -2363800420590703022}
   m_Layer: 0
   m_Name: Female 4
-  m_TagString: Untagged
+  m_TagString: Person
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -26,16 +26,16 @@ public class Human_Regen : MonoBehaviour
         {
             Debug.Log("벽에 닿았습니다.");
 
-            GameObject hum = Instantiate(humanPrefab);
 
-            hum.transform.position = humanRegenPoint.position;
-            hum.transform.rotation = humanRegenPoint.rotation;
+            humanPrefab.transform.position = humanRegenPoint.position;
+            humanPrefab.transform.rotation = humanRegenPoint.rotation;
 
             // 생성된 hum을 자식으로 넣기
-            hum.transform.SetParent(humanRegenPoint);
+            humanPrefab.transform.SetParent(humanRegenPoint);
+            humanPrefab.SetActive(true);
 
             // 5초후 hum을 setactive(false)
-            StartCoroutine(DeactivateHum(hum, 5f));
+            StartCoroutine(DeactivateHum(humanPrefab, 5f));
         }
 
     }

@@ -118,4 +118,17 @@ public class BusNav_Controller : MonoBehaviour
             agent.SetDestination(destinations[currentDestinationIndex].position);
         }
     }
+
+
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("Person"))
+        {
+            Debug.Log("사람입니다");
+        }
+
+          
+
+    }
 }
