@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.Sentis;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public class RunYOLO : MonoBehaviour
 {
@@ -33,18 +34,26 @@ public class RunYOLO : MonoBehaviour
 
     int minIndex = -1;
 
-    private Color[] classColors = new Color[]
+    Color boxColor = Color.red;
+
+    /* private Color[] classColors = new Color[]
+     {
+         Color.red,
+         Color.green,
+         Color.blue,
+         Color.yellow,
+         Color.magenta,
+         Color.cyan,
+         Color.gray,
+         Color.white,
+         Color.black
+     };*/
+
+/*    Dictionary<string, Color> labelColorMapping = new Dictionary<string, Color>()
     {
-        Color.red,
-        Color.green,
-        Color.blue,
-        Color.yellow,
-        Color.magenta,
-        Color.cyan,
-        Color.gray,
-        Color.white,
-        Color.black
-    };
+        { "person", Color.red },
+        { "car", Color.blue },
+    };*/
 
     public struct BoundingBox
     {
@@ -102,15 +111,11 @@ public class RunYOLO : MonoBehaviour
         // 텍스처를 모델 입력으로 변환
         using var input = TextureConverter.ToTensor(targetRT, 640, 640, 3);
 
-        print(input);
-
         engine.Execute(input);
 
         var output = engine.PeekOutput() as TensorFloat;
 
         output.CompleteOperationsAndDownload();
-
-        print(output);
 
         float displayWidth = Screen.width;
 
@@ -128,39 +133,35 @@ public class RunYOLO : MonoBehaviour
             {
                 centerX = ((output[n, 1] + output[n, 3]) * 0.5f * scaleX), // 640 * 2560),
                 centerY = displayHeight + ((output[n, 2] + output[n, 4]) * 0.5f * -scaleY),
-                width = (output[n, 3] - output[n, 1]) * scaleX,
-                height = (output[n, 4] - output[n, 2]) * scaleY,
+                width = (output[n, 3] - output[n, 1]) * scaleX * 1.5f,
+                height = (output[n, 4] - output[n, 2]) * scaleY * 1.5f,
                 label = labels[(int)output[n, 5]],
                 confidence = Mathf.FloorToInt(output[n, 6] * 100 + 0.5f)
             };
-
-            /*if(box.confidence > 65)
+            
+            if (box.confidence > 65)
             {
                 DrawBox(box, n);
-            }*/
-            DrawBox(box, n);
+            }
+            //DrawBox(box, n);
         }
     }
 
     public void DrawBox(BoundingBox box, int id)
     {
-        Color boxColor = classColors[id % classColors.Length];
-
         GameObject panel;
 
         GameObject[] person = GameObject.FindGameObjectsWithTag("Person");
+        
 
-        print(person.Length);
 
-        if(person.Length > 0) 
+        if (person.Length > 0) 
         {
             float[] distance = new float[person.Length];
 
             for (int i = 0; i < person.Length; i++) 
             {
                 distance[i] = Vector3.Distance(this.gameObject.transform.position, person[i].transform.position); 
-
-                print(distance[i]);
 
                 mindist = Mathf.Min(mindist, distance[i]);
             }
