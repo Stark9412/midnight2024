@@ -2,32 +2,36 @@ using System.Collections.Generic;
 using Unity.Sentis;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Video;
 
 public class RunYOLO : MonoBehaviour
 {
     public ModelAsset modelAsset;
-    const string modelName = "yolov7-tiny.sentis";
-    const string videoName = "giraffes.mp4";
+
     public TextAsset labelsAsset;
-    public RawImage displayImage;
+
     public Sprite borderSprite;
+
     public Texture2D borderTexture;
+
     public Font font;
 
-    private Transform displayLocation;
     private Model model;
+
     private IWorker engine;
+
     private string[] labels;
+
     private RenderTexture targetRT;
-    const BackendType backend = BackendType.GPUCompute;
 
     private const int imageWidth = 640;
+
     private const int imageHeight = 640;
 
-    private VideoPlayer video;
-
     private List<GameObject> boxPool = new List<GameObject>();
+
+    public float mindist = float.MaxValue;
+
+    int minIndex = -1;
 
     private Color[] classColors = new Color[]
     {
@@ -55,30 +59,19 @@ public class RunYOLO : MonoBehaviour
     void Start()
     {
         Application.targetFrameRate = 60;
-        Screen.orientation = ScreenOrientation.LandscapeLeft;
 
         labels = labelsAsset.text.Split('\n');
-        model = ModelLoader.Load(modelAsset);
-        targetRT = new RenderTexture(imageWidth, imageHeight, 0);
-        displayLocation = displayImage.transform;
-        engine = WorkerFactory.CreateWorker(backend, model);
 
-        SetupInput();
+        model = ModelLoader.Load(modelAsset);
+
+        targetRT = new RenderTexture(2560, 1600, 0);
+
+        engine = WorkerFactory.CreateWorker(BackendType.GPUCompute, model);
 
         if (borderSprite == null)
         {
             borderSprite = Sprite.Create(borderTexture, new Rect(0, 0, borderTexture.width, borderTexture.height), new Vector2(borderTexture.width / 2, borderTexture.height / 2));
         }
-    }
-
-    void SetupInput()
-    {
-        video = gameObject.AddComponent<VideoPlayer>();
-        video.renderMode = VideoRenderMode.APIOnly;
-        video.source = VideoSource.Url;
-        video.url = Application.streamingAssetsPath + "/" + videoName;
-        video.isLooping = true;
-        video.Play();
     }
 
     private void Update()
@@ -95,38 +88,56 @@ public class RunYOLO : MonoBehaviour
     {
         ClearAnnotations();
 
-        if (video && video.texture)
-        {
-            float aspect = video.width * 1f / video.height;
-            Graphics.Blit(video.texture, targetRT, new Vector2(1f / aspect, 1), new Vector2(0, 0));
-            displayImage.texture = targetRT;
-        }
-        else return;
+        // Camera에서 실시간 화면을 텍스처로 변환하여 모델 입력으로 사용
+        Camera mainCamera = Camera.main;
 
-        using var input = TextureConverter.ToTensor(targetRT, imageWidth, imageHeight, 3);
+        if (mainCamera == null) return;
+
+        mainCamera.targetTexture = targetRT;
+
+        mainCamera.Render();
+
+        mainCamera.targetTexture = null;
+
+        // 텍스처를 모델 입력으로 변환
+        using var input = TextureConverter.ToTensor(targetRT, 640, 640, 3);
+
+        print(input);
+
         engine.Execute(input);
 
         var output = engine.PeekOutput() as TensorFloat;
+
         output.CompleteOperationsAndDownload();
 
-        float displayWidth = displayImage.rectTransform.rect.width;
-        float displayHeight = displayImage.rectTransform.rect.height;
+        print(output);
+
+        float displayWidth = Screen.width;
+
+        float displayHeight = Screen.height;
 
         float scaleX = displayWidth / imageWidth;
+
         float scaleY = displayHeight / imageHeight;
 
         int foundBoxes = output.shape[0];
+
         for (int n = 0; n < foundBoxes; n++)
         {
             var box = new BoundingBox
             {
-                centerX = ((output[n, 1] + output[n, 3]) * scaleX - displayWidth) / 2,
-                centerY = ((output[n, 2] + output[n, 4]) * scaleY - displayHeight) / 2,
+                centerX = ((output[n, 1] + output[n, 3]) * 0.5f * scaleX), // 640 * 2560),
+                centerY = displayHeight + ((output[n, 2] + output[n, 4]) * 0.5f * -scaleY),
                 width = (output[n, 3] - output[n, 1]) * scaleX,
                 height = (output[n, 4] - output[n, 2]) * scaleY,
                 label = labels[(int)output[n, 5]],
                 confidence = Mathf.FloorToInt(output[n, 6] * 100 + 0.5f)
             };
+
+            /*if(box.confidence > 65)
+            {
+                DrawBox(box, n);
+            }*/
             DrawBox(box, n);
         }
     }
@@ -136,52 +147,107 @@ public class RunYOLO : MonoBehaviour
         Color boxColor = classColors[id % classColors.Length];
 
         GameObject panel;
+
+        GameObject[] person = GameObject.FindGameObjectsWithTag("Person");
+
+        print(person.Length);
+
+        if(person.Length > 0) 
+        {
+            float[] distance = new float[person.Length];
+
+            for (int i = 0; i < person.Length; i++) 
+            {
+                distance[i] = Vector3.Distance(this.gameObject.transform.position, person[i].transform.position); 
+
+                print(distance[i]);
+
+                mindist = Mathf.Min(mindist, distance[i]);
+            }
+            print(mindist);
+        }
+
         if (id < boxPool.Count)
         {
             panel = boxPool[id];
+
             panel.SetActive(true);
         }
         else
         {
             panel = CreateNewBox(boxColor);
         }
-        panel.transform.localPosition = new Vector3(box.centerX, -box.centerY);
+
+        //panel.transform.position = new Vector3(box.centerX, box.centerY);
+
+        panel.transform.position = new Vector3(box.centerX, box.centerY);
 
         RectTransform rt = panel.GetComponent<RectTransform>();
+
         rt.sizeDelta = new Vector2(box.width, box.height);
 
         var label = panel.GetComponentInChildren<Text>();
+
         label.text = box.label + " (" + box.confidence + "%)";
     }
 
     public GameObject CreateNewBox(Color color)
     {
         var panel = new GameObject("ObjectBox");
-        panel.AddComponent<CanvasRenderer>();
-        Image img = panel.AddComponent<Image>();
-        img.color = color;
-        img.sprite = borderSprite;
-        img.type = Image.Type.Sliced;
-        panel.transform.SetParent(displayLocation, false);
 
+        panel.AddComponent<CanvasRenderer>();
+
+        Image img = panel.AddComponent<Image>();
+
+        img.color = color;
+
+        img.sprite = borderSprite;
+
+        img.type = Image.Type.Sliced;
+
+        // 적절한 부모 설정 (Canvas 또는 특정 UI 요소)
+        Canvas canvas = FindObjectOfType<Canvas>();
+
+        if (canvas != null)
+        {
+            panel.transform.SetParent(canvas.transform, false);
+        }
+        else
+        {
+            Debug.LogError("Canvas가 씬에 없습니다. Canvas를 추가해 주세요.");
+
+            return null;
+        }
+
+        // 라벨 텍스트 생성 및 설정
         var text = new GameObject("ObjectLabel");
+
         text.AddComponent<CanvasRenderer>();
+
         text.transform.SetParent(panel.transform, false);
+
         Text txt = text.AddComponent<Text>();
+
         txt.font = font;
+
         txt.color = color;
+
         txt.fontSize = 40;
+
         txt.horizontalOverflow = HorizontalWrapMode.Overflow;
 
         RectTransform rt2 = text.GetComponent<RectTransform>();
-        rt2.offsetMin = new Vector2(20, rt2.offsetMin.y);
-        rt2.offsetMax = new Vector2(0, rt2.offsetMax.y);
-        rt2.offsetMin = new Vector2(rt2.offsetMin.x, 0);
-        rt2.offsetMax = new Vector2(rt2.offsetMax.x, 30);
+
+        rt2.offsetMin = new Vector2(20, 0);
+
+        rt2.offsetMax = new Vector2(-20, 30);
+
         rt2.anchorMin = new Vector2(0, 0);
+
         rt2.anchorMax = new Vector2(1, 1);
 
         boxPool.Add(panel);
+
         return panel;
     }
 
