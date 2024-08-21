@@ -82,6 +82,11 @@ public class BusNav_Controller : MonoBehaviour
     public void BusStop()
     {
         // 감속 처리
+        if (agent.isStopped ==  true)
+        {
+            return;
+        }
+
         currentSpeed -= deceleration * Time.deltaTime;
         currentSpeed = Mathf.Clamp(currentSpeed, 0, maxSpeed);
         agent.speed = currentSpeed;
